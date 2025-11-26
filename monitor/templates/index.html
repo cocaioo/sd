@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>RPC Monitor</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #eee; padding: 16px }
+    .container { max-width: 900px; margin: 0 auto }
+    h1 { margin-bottom: 8px }
+    .event { background: #1b1b1b; border: 1px solid #222; padding: 10px; margin: 8px 0; border-radius: 6px }
+    .meta { color: #9aa; font-size: 12px }
+    .payload { margin-top: 6px; font-family: monospace; font-size: 13px; color: #cfe }
+    .source-server { border-left: 4px solid #2b8; }
+    .source-client { border-left: 4px solid #48a }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>RPC Monitor</h1>
+    <p>Exibe eventos recentes do servidor e do cliente.</p>
+    <div id="events"></div>
+  </div>
+
+  <script>
+    async function fetchEvents(){
+      try{
+        const res = await fetch('/events');
+        const data = await res.json();
+        const container = document.getElementById('events');
+        container.innerHTML = '';
+        data.reverse(); // show newest first
+        for(const e of data){
+          const el = document.createElement('div');
+          el.className = 'event ' + (e.source === 'server' ? 'source-server' : 'source-client');
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = `${e.ts} • ${e.source} • ${e.type}`;
+          const payload = document.createElement('div');
+          payload.className = 'payload';
+          payload.textContent = JSON.stringify(e.payload, null, 2);
+          el.appendChild(meta);
+          el.appendChild(payload);
+          container.appendChild(el);
+        }
+      }catch(err){
+        console.error(err);
+      }
+    }
+
+    fetchEvents();
+    setInterval(fetchEvents, 1500);
+  </script>
+</body>
+</html>

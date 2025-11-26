@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    container_name: rpc_server
+    ports:
+      - "8000:8000"   # expõe para host, se quiser testar fora do cliente
+    networks:
+      - rpc_net
+    volumes:
+      - rpc_shared:/shared
+
+  client:
+    build: ./client
+    container_name: rpc_client
+    depends_on:
+      - server
+    networks:
+      - rpc_net
+    stdin_open: true
+    tty: true
+    volumes:
+      - rpc_shared:/shared
+
+  monitor:
+    build: ./monitor
+    container_name: rpc_monitor
+    ports:
+      - "5000:5000"
+    networks:
+      - rpc_net
+    volumes:
+      - rpc_shared:/shared
+
+networks:
+  rpc_net:
+    driver: bridge
+
+volumes:
+  rpc_shared:
+    driver: local
