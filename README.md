@@ -14,6 +14,22 @@ O `docker-compose.yml` sobe os três serviços e cria um volume compartilhado (`
 ## Estrutura do projeto
 
 - `docker-compose.yml`  — define os serviços e volume compartilhado.
+# Calculadora RPC (guia rápido)
+
+Projeto didático: uma calculadora distribuída por XML-RPC, empacotada com Docker.
+
+Contém três componentes principais:
+
+- `server`: servidor XML-RPC (operações: somar, subtrair, multiplicar, dividir).
+- `client`: cliente em modo texto (menu interativo) que chama o `server`.
+- `monitor`: frontend web (Flask) que mostra eventos do `client` e `server`.
+
+O `docker-compose.yml` sobe os três serviços e cria um volume compartilhado (`rpc_shared`) para troca de eventos.
+---
+
+## Estrutura do projeto
+
+- `docker-compose.yml`  — define os serviços e volume compartilhado.
 - `server/`             — código do servidor (`server.py`).
 - `client/`             — código do cliente (`client.py`).
 - `monitor/`            — app Flask e templates do monitor.
@@ -48,7 +64,7 @@ Procure por `rpc_server`, `rpc_client` e `rpc_monitor` com status `Up`.
 - Abra: `http://localhost:5000`.
 - O monitor mostra eventos recentes (requisições, respostas e erros) gerados pelo `client` e `server`.
 
-Observação: o monitor é apenas um painel de observação; a calculadora interativa continua sendo o cliente em terminal.
+Observação: o monitor é um painel de observação; a calculadora interativa continua sendo o cliente em terminal.
 ---
 
 ## Usar a calculadora (cliente)
@@ -145,7 +161,7 @@ docker-compose up -d monitor
 
 ## Próximos passos (opcionais)
 
-- Posso adicionar ao `monitor` um formulário para chamar o `server` diretamente e exibir resultados na web.
+- Adicionar ao `monitor` um formulário para chamar o `server` diretamente e exibir resultados na web.
 - Melhorias: filtros, métricas por método e histórico em banco leve.
 ---
 
@@ -154,5 +170,3 @@ docker-compose up -d monitor
 - Subir tudo: `docker-compose up --build -d`
 - Abrir monitor: `http://localhost:5000`
 - Usar cliente: `docker exec -it rpc_client /bin/sh` → `python -u client.py`
-
-Se quiser, eu implemento a calculadora também no web frontend. Quer que eu faça isso? 
