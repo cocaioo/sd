@@ -169,4 +169,4 @@ docker-compose up -d monitor
 
 - Subir tudo: `docker-compose up --build -d`
 - Abrir monitor: `http://localhost:5000`
-- Usar cliente: `docker exec -it rpc_client /bin/sh` → `python -u client.py`
+- Usar cliente: `docker attach rpc_client`
