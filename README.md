@@ -1,104 +1,83 @@
-# Projeto RPC - Calculadora Distribuída
+# Calculadora RPC (guia rápido)
 
-Este repositório contém uma versão didática de uma calculadora distribuída usando XML-RPC em Python.
-O projeto inclui:
+Projeto didático: uma calculadora distribuída por XML-RPC, empacotada com Docker.
 
-- Um serviço `server` (XML-RPC) que implementa operações de cálculo (somar, subtrair, multiplicar, dividir).
-- Um `client` de terminal que usa `xmlrpc.client` e fornece uma interface em modo texto.
-- Um `monitor` web simples (Flask) que exibe eventos gerados pelo `server` e pelo `client` em tempo real.
-- Um `docker-compose.yml` que empacota os três serviços e compartilha um volume `rpc_shared` para eventos.
+Contém três componentes principais:
 
-Este README documenta passo-a-passo como usar, debugar e estender o sistema.
+- `server`: servidor XML-RPC (operações: somar, subtrair, multiplicar, dividir).
+- `client`: cliente em modo texto (menu interativo) que chama o `server`.
+- `monitor`: frontend web (Flask) que mostra eventos do `client` e do `server`.
 
+O `docker-compose.yml` sobe os três serviços e cria um volume compartilhado (`rpc_shared`) para troca de eventos.
 ---
 
 ## Estrutura do projeto
 
-Principais arquivos e diretórios:
-
-- `docker-compose.yml` : define os serviços `server`, `client` e `monitor`, e o volume `rpc_shared`.
-- `server/` : código do servidor RPC (`server.py`) e `Dockerfile`.
-- `client/` : cliente interativo (`client.py`) e `Dockerfile`.
-- `monitor/` : frontend Flask que lê `/shared/events.log` e mostra no navegador.
-- `README.md` : este arquivo.
-
+- `docker-compose.yml`  — define os serviços e volume compartilhado.
+- `server/`             — código do servidor (`server.py`).
+- `client/`             — código do cliente (`client.py`).
+- `monitor/`            — app Flask e templates do monitor.
+- `README.md`           — este guia.
 ---
 
 ## Pré-requisitos
 
-- Docker e Docker Compose instalados e funcionando no sistema.
-- (Opcional) Python 3.11+ se quiser executar componentes localmente sem Docker.
-
+- Docker e Docker Compose instalados.
+- Navegador para acessar o monitor (http://localhost:5000).
 ---
 
-## Como subir tudo (modo recomendado: Docker)
+## Como subir (Docker)
 
-1. Na raiz do projeto (onde está `docker-compose.yml`) execute:
+1) Na pasta do projeto, rode:
 
 ```bash
 docker-compose up --build -d
 ```
 
-Esse comando reconstrói as imagens (caso necessário) e sobe os três serviços em background.
-
-2. Verifique status dos containers:
+2) Verifique os containers:
 
 ```bash
 docker-compose ps
-# ou
-docker ps -a
 ```
 
-Você deve ver os containers `rpc_server`, `rpc_client` e `rpc_monitor` com STATUS `Up`.
-
+Procure por `rpc_server`, `rpc_client` e `rpc_monitor` com status `Up`.
 ---
 
-## Acessando o Monitor Web
+## Monitor (web)
 
-- Abra o navegador em: `http://localhost:5000`.
-- O monitor mostra os eventos recentes escritos em `/shared/events.log` por ambos `server` e `client`.
-- A UI atual é leitura (histórico + atualização automática a cada ~1.5s). Ela não substitui a calculadora interativa do `client` (que roda no terminal).
+- Abra: `http://localhost:5000`.
+- O monitor mostra eventos recentes (requisições, respostas e erros) gerados pelo `client` e `server`.
 
+Observação: o monitor é apenas um painel de observação; a calculadora interativa continua sendo o cliente em terminal.
 ---
 
-## Usando a calculadora (cliente interativo)
+## Usar a calculadora (cliente)
 
-O cliente é um app de terminal dentro do container `rpc_client`. Existem 3 maneiras de usá-lo:
+Opções principais:
 
-1) Anexar ao processo principal do container (rápido):
+- Anexar ao processo já em execução:
 
 ```bash
 docker attach rpc_client
 ```
 
-- Observação: `docker attach` conecta ao stdin/stdout do processo principal do container.
-- Se a tela abrir em branco, pressione `ENTER` — o menu textual aparecerá.
-- Para desconectar do attach sem parar o container, use `Ctrl-p` `Ctrl-q`.
+Se a tela aparecer vazia, pressione `ENTER`. Para sair do attach sem parar o container: `Ctrl-p` `Ctrl-q`.
 
-2) Abrir um shell dentro do container e rodar o cliente (recomendado para desenvolvimento):
+- Abrir um shell no container e rodar o cliente (recomendado):
 
 ```bash
 docker exec -it rpc_client /bin/sh
-# dentro do container:
 python -u client.py
 ```
 
-Essa abordagem cria um TTY novo e evita alguns problemas de attach.
+- Rodar localmente (sem Docker): execute `python client/client.py` a partir da raiz do projeto.
 
-3) Rodar o cliente localmente (sem Docker) — útil apenas para depuração:
-
-```bash
-# a partir da raiz do projeto
-python client/client.py
-```
-
-Certifique-se que o `server` esteja acessível como `http://server:8000/RPC2` quando dentro do Docker, ou `http://localhost:8000/RPC2` se rodando tudo localmente.
-
+Dentro do Docker, o `server` está disponível pelo endereço `http://server:8000/RPC2`.
 ---
 
-## Teste rápido via script (do host)
+## Teste rápido (do host)
 
-Se quiser testar o servidor sem abrir o cliente interativo, execute no host:
+Para testar o servidor diretamente:
 
 ```bash
 python - <<'PY'
@@ -107,88 +86,73 @@ s = xmlrpc.client.ServerProxy("http://localhost:8000/RPC2")
 print('somar(2,3) ->', s.somar(2,3))
 PY
 ```
-
 ---
 
-## Logs e monitoramento
+## Logs e arquivo de eventos
 
-- Logs do Flask Monitor:
+- Ver logs do monitor (Flask):
+
 ```bash
 docker logs -f rpc_monitor
 ```
-- Logs do servidor e cliente:
+
+- Ver logs do servidor/cliente:
+
 ```bash
 docker logs -f rpc_server
 docker logs -f rpc_client
 ```
-- O arquivo compartilhado de eventos fica em `/shared/events.log` dentro dos containers; para inspecioná-lo diretamente:
+
+- Inspecionar o arquivo de eventos (compartilhado):
 
 ```bash
 docker exec -it rpc_monitor /bin/sh -c "tail -n 200 /shared/events.log || true"
 ```
 
-O `events.log` contém um JSON por linha com formato:
-
-```json
-{"ts": "2025-11-26T..Z", "source": "client|server", "type": "request|response|error", "payload": {...}}
-```
-
+O arquivo `events.log` contém um JSON por linha com entradas do tipo `request`, `response` ou `error`.
 ---
 
-## Parar e remover os containers
+## Parar e remover
+
+Parar e remover containers (não remove volumes):
 
 ```bash
 docker-compose down
 ```
 
-Esse comando para e remove os containers (mas mantém o volume `rpc_shared` por padrão). Para remover também volumes use:
+Para também remover volumes:
 
 ```bash
 docker-compose down -v
 ```
-
 ---
 
-## Problemas comuns e soluções
+## Problemas comuns
 
-- Monitor não sobe / erro `flask_cors` import error:
-  - Verifique se a imagem do `monitor` foi reconstruída após adicionar dependências:
-    ```bash
-    docker-compose build monitor
-    docker-compose up -d monitor
-    ```
+- Erro `flask_cors` ao iniciar o monitor: reconstrua a imagem do monitor:
 
-- `docker attach` mostra tela em branco:
-  - Pressione `ENTER` para forçar reimpressão do prompt.
-  - Recomendo `docker exec -it rpc_client /bin/sh` + `python -u client.py` para desenvolvimento interativo.
+```bash
+docker-compose build monitor
+docker-compose up -d monitor
+```
 
-- `events.log` vazio ou sem atualizações:
-  - Confirme que o volume `rpc_shared` está montado em todos os containers (`docker inspect rpc_monitor` e verificar `Mounts`).
-  - Verifique permissões: dentro do `rpc_monitor`, rode `ls -la /shared`.
+- `docker attach` sem saída visível: pressione `ENTER` ou use `docker exec -it rpc_client /bin/sh`.
 
-- Container com ExitCode != 0:
-  - Veja `docker logs <container>` para stacktrace.
+- `events.log` sem conteúdo: verifique se o volume `rpc_shared` está montado em todos os containers e as permissões em `/shared`.
 
+- Container com erro: consulte `docker logs <container>` para a mensagem completa.
 ---
 
-## Desenvolvimento e extensão
+## Próximos passos (opcionais)
 
-- Adicionar frontend interativo no `monitor`:
-  - A UI atual já pode ser expandida para enviar chamadas XML-RPC diretamente ao servidor. Posso implementar essa funcionalidade se quiser.
-
-- Melhorias possíveis:
-  - Filtros por método/cliente/servidor, contadores em tempo real, thumbnails, histórico persistente em base leve.
-  - Substituir desenvolvimento Flask server por WSGI (gunicorn) para produção.
-
+- Posso adicionar ao `monitor` um formulário para chamar o `server` diretamente e exibir resultados na web.
+- Melhorias: filtros, métricas por método e histórico em banco leve.
 ---
 
-## Arquivo `docker-compose.yml` importante (resumo)
+## Resumo rápido
 
-- Serviços: `server` (porta 8000), `client`, `monitor` (porta 5000).
-- Volume compartilhado: `rpc_shared` → montado em `/shared` nos 3 containers.
+- Subir tudo: `docker-compose up --build -d`
+- Abrir monitor: `http://localhost:5000`
+- Usar cliente: `docker exec -it rpc_client /bin/sh` → `python -u client.py`
 
----
-
-Se preferir, eu posso gerar um `README_pt_BR.md` com capturas de tela e exemplos de uso passo-a-passo (prints). Também posso implementar o frontend web interativo (botões + formulário) no `monitor` agora — diga qual próximo passo prefere.
-
-Obrigado — se algo falhar ao rodar os comandos acima cole aqui a saída que eu te ajudo a corrigir.
+Se quiser, eu implemento a calculadora também no web frontend. Quer que eu faça isso? 
