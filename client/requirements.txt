@@ -1,0 +1,2 @@
+# requisitos do serviço client
+# Nenhuma dependência externa necessária; arquivo presente para Docker COPY
