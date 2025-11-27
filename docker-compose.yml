@@ -16,6 +16,7 @@ services:
     container_name: rpc_client
     depends_on:
       - server
+      - monitor
     networks:
       - rpc_net
     stdin_open: true
@@ -32,6 +33,12 @@ services:
       - rpc_net
     volumes:
       - rpc_shared:/shared
+    environment:
+      # Clear monitor's events.log on start (default enabled). Set to '0' to keep.
+      - RPC_CLEAR_ON_START=1
+      # By default deduplication is enabled (remove identical client/server events).
+      # Set to '1' to disable deduplication for debugging.
+      - RPC_DISABLE_DEDUP=0
 
 networks:
   rpc_net:

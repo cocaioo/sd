@@ -1,6 +1,10 @@
 import xmlrpc.client
 import time
 import os
+import sys
+import threading
+import urllib.request
+import urllib.error
 
 
 def clear_screen():
@@ -114,9 +118,38 @@ def ler_operandos():
     return a, b
 
 
+def _notify_monitor_on_attach():
+    """Background thread: when stdin becomes a TTY (attach), notify monitor to clear logs."""
+    monitor_url = os.environ.get('RPC_MONITOR_URL', 'http://monitor:5000/control/clear')
+    triggered = False
+    while True:
+        try:
+            is_tty = sys.stdin.isatty()
+        except Exception:
+            is_tty = False
+
+        if is_tty and not triggered:
+            # attempt POST request to monitor
+            try:
+                req = urllib.request.Request(monitor_url, method='POST')
+                with urllib.request.urlopen(req, timeout=2) as resp:
+                    pass
+                print('[CLIENT] Notified monitor to clear events')
+            except Exception:
+                # ignore failures; monitor might not be up yet
+                pass
+            triggered = True
+
+        time.sleep(0.5)
+
+
 def main():
     server_url = "http://server:8000/RPC2"  # vamos usar 'server' como hostname no Docker
     calc = CalculadoraClient(server_url)
+
+    # start attach-watcher thread to notify monitor when container is attach()-ed
+    watcher = threading.Thread(target=_notify_monitor_on_attach, daemon=True)
+    watcher.start()
 
     while True:
         clear_screen()
