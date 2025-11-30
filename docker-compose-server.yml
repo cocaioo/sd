@@ -10,6 +10,8 @@ services:
   server:
     build: ./server
     container_name: rpc_server
+    env_file:
+      - .env
     ports:
       - "8000:8000"   # Expõe servidor na rede (0.0.0.0:8000)
     networks:
@@ -21,6 +23,8 @@ services:
   monitor:
     build: ./monitor
     container_name: rpc_monitor
+    env_file:
+      - .env
     ports:
       - "5000:5000"   # Expõe monitor web na rede
     networks:

@@ -14,13 +14,14 @@ services:
       - rpc_net
     stdin_open: true
     tty: true
+    env_file:
+      - .env
     environment:
       # IMPORTANTE: Configure aqui o IP/hostname do PC que roda o servidor
-      # Exemplo: RPC_SERVER_HOST=192.168.1.100
-      # Ou use o hostname: RPC_SERVER_HOST=nome-do-pc-servidor
-      - RPC_SERVER_HOST=${RPC_SERVER_HOST:-server}
+      # Agora configurado automaticamente via .env para IP: 192.168.1.160
+      - RPC_SERVER_HOST=${RPC_SERVER_HOST:-192.168.1.160}
       - RPC_SERVER_PORT=${RPC_SERVER_PORT:-8000}
-      - RPC_MONITOR_URL=${RPC_MONITOR_URL:-}
+      - RPC_MONITOR_URL=${RPC_MONITOR_URL:-http://192.168.1.160:5000/control/clear}
       # Path compartilhado (opcional - só para logs locais)
       - RPC_SHARED_PATH=/shared
     volumes:
