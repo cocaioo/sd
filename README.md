@@ -9,6 +9,35 @@ Contém três componentes principais:
 - `monitor`: frontend web (Flask) que mostra eventos do `client` e do `server`.
 
 O `docker-compose.yml` sobe os três serviços e cria um volume compartilhado (`rpc_shared`) para troca de eventos.
+
+## 🌐 Deployment Distribuído (2 PCs)
+
+**Quer rodar o servidor em um PC e o cliente em outro?** 
+
+👉 **Veja o guia completo:** [INSTALL_DISTRIBUIDO.md](INSTALL_DISTRIBUIDO.md)
+
+**Setup rápido:**
+
+**PC 1 (Servidor):**
+```bash
+# Windows
+start-server.bat
+
+# Linux/Mac
+chmod +x start-server.sh
+./start-server.sh
+```
+
+**PC 2 (Cliente):**
+```bash
+# Windows
+start-client.bat
+
+# Linux/Mac
+chmod +x start-client.sh
+./start-client.sh
+```
+
 ---
 
 ## Estrutura do projeto
