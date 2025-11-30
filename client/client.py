@@ -144,7 +144,12 @@ def _notify_monitor_on_attach():
 
 
 def main():
-    server_url = "http://server:8000/RPC2"  # vamos usar 'server' como hostname no Docker
+    # Configurable via environment variables for distributed deployment
+    server_host = os.environ.get('RPC_SERVER_HOST', 'server')
+    server_port = os.environ.get('RPC_SERVER_PORT', '8000')
+    server_url = f"http://{server_host}:{server_port}/RPC2"
+    
+    print(f"[CLIENT] Conectando ao servidor RPC em: {server_url}")
     calc = CalculadoraClient(server_url)
 
     # start attach-watcher thread to notify monitor when container is attach()-ed

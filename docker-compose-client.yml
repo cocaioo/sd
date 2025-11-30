@@ -1,0 +1,36 @@
+version: "3.9"
+
+# ============================================================
+# DOCKER COMPOSE PARA O PC QUE VAI RODAR O CLIENTE
+# ============================================================
+# Este arquivo deve ser usado na máquina que executará o cliente RPC.
+# Configure a variável RPC_SERVER_HOST com o IP do PC que roda o servidor.
+
+services:
+  client:
+    build: ./client
+    container_name: rpc_client
+    networks:
+      - rpc_net
+    stdin_open: true
+    tty: true
+    environment:
+      # IMPORTANTE: Configure aqui o IP/hostname do PC que roda o servidor
+      # Exemplo: RPC_SERVER_HOST=192.168.1.100
+      # Ou use o hostname: RPC_SERVER_HOST=nome-do-pc-servidor
+      - RPC_SERVER_HOST=${RPC_SERVER_HOST:-server}
+      - RPC_SERVER_PORT=${RPC_SERVER_PORT:-8000}
+      - RPC_MONITOR_URL=${RPC_MONITOR_URL:-}
+      # Path compartilhado (opcional - só para logs locais)
+      - RPC_SHARED_PATH=/shared
+    volumes:
+      - client_logs:/shared
+    restart: unless-stopped
+
+networks:
+  rpc_net:
+    driver: bridge
+
+volumes:
+  client_logs:
+    driver: local

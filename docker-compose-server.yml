@@ -1,0 +1,43 @@
+version: "3.9"
+
+# ============================================================
+# DOCKER COMPOSE PARA O PC QUE VAI RODAR O SERVIDOR
+# ============================================================
+# Este arquivo deve ser usado na máquina que hospedará o servidor RPC.
+# O servidor ficará acessível na rede local na porta 8000.
+
+services:
+  server:
+    build: ./server
+    container_name: rpc_server
+    ports:
+      - "8000:8000"   # Expõe servidor na rede (0.0.0.0:8000)
+    networks:
+      - rpc_net
+    volumes:
+      - rpc_shared:/shared
+    restart: unless-stopped
+
+  monitor:
+    build: ./monitor
+    container_name: rpc_monitor
+    ports:
+      - "5000:5000"   # Expõe monitor web na rede
+    networks:
+      - rpc_net
+    volumes:
+      - rpc_shared:/shared
+    environment:
+      # Clear monitor's events.log on start (default enabled)
+      - RPC_CLEAR_ON_START=1
+      # By default deduplication is enabled
+      - RPC_DISABLE_DEDUP=0
+    restart: unless-stopped
+
+networks:
+  rpc_net:
+    driver: bridge
+
+volumes:
+  rpc_shared:
+    driver: local
