@@ -15,6 +15,13 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     SERVER_IP=$(hostname -I | awk '{print $1}')
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     SERVER_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    # Windows (Git Bash/MSYS/Cygwin)
+    SERVER_IP=$(ipconfig.exe | grep -A 3 "Wireless LAN\|Ethernet" | grep "IPv4" | head -n 1 | awk '{print $NF}' | tr -d '\r')
+    if [ -z "$SERVER_IP" ]; then
+        # Fallback: pegar primeiro IPv4 que não seja 127.0.0.1
+        SERVER_IP=$(ipconfig.exe | grep "IPv4" | head -n 1 | awk '{print $NF}' | tr -d '\r')
+    fi
 else
     echo "⚠️  Sistema não suportado para detecção automática de IP"
     SERVER_IP="<detectar manualmente>"
